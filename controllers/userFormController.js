@@ -36,22 +36,7 @@ const getAllUserInputs = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-const deleteUserInput = async (req, res) => {
-    try {
-      const { id } = req.params;
-      if (!id) {
-        return res.status(400).json({ message: "User ID is required" });
-      }
-      const deletedForm = await UserForm.findByIdAndDelete(id);
-      if (!deletedForm) {
-        return res.status(404).json({ message: "User input not found" });
-      }
-      res.status(200).json({ message: "User input deleted successfully" });
-    } catch (error) {
-      console.error("Error deleting user input:", error.message);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  };
+
 
   const FormCount = async (req,res) => {
     try {
@@ -65,8 +50,7 @@ const deleteUserInput = async (req, res) => {
 
   const DeleteEnquiry = async (req, res) => {
     try {
-      const { id } = req.params;
-  
+      const { id } = req.body;
       if (!id) {
         return res.status(400).json({ message: "Enquiry ID is required" });
       }
@@ -85,4 +69,4 @@ const deleteUserInput = async (req, res) => {
   };
   
 
-module.exports = { saveUserInputs, getAllUserInputs,deleteUserInput,FormCount,DeleteEnquiry };
+module.exports = { saveUserInputs, getAllUserInputs,FormCount,DeleteEnquiry };

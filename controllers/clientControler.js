@@ -59,7 +59,7 @@ const AddClients = async (req, res) => {
 const getClients = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = parseInt(req.query.limit) || 3;
     const skip = (page - 1) * limit;
 
     const clients = await ClientSchema.find()

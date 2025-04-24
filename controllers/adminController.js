@@ -1,6 +1,6 @@
 const AdminModel = require("../models/adminModal");
 const bcrypt = require("bcrypt");
-const {GenerateAdminToken } = require("../utils/AccessToken");
+const { GenerateAdminToken } = require("../utils/AccessToken");
 
 const adminSignUp = async (req, res) => {
   try {
@@ -61,14 +61,14 @@ const adminLogin = async (req, res) => {
     const token = GenerateAdminToken(admin.email);
     res.cookie("adminToken", token, {
       httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 24 * 60 * 60 * 1000,
     });
 
-    console.log("Login successful" );
-    
+    console.log("Login successful");
 
-    res.status(200).json({ message: "Login successful",});
+    res.status(200).json({ message: "Login successful" });
   } catch (error) {
     console.error("Error in adminLogin:", error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -87,13 +87,11 @@ const verifyAdmin = async (req, res) => {
     if (!admin) {
       return res.status(404).json({ message: "Admin not found" });
     }
-  
-    res
-      .status(200)
-      .json({
-        message: "Admin verified",
-        admin:admin,
-      });
+
+    res.status(200).json({
+      message: "Admin verified",
+      admin: admin,
+    });
   } catch (error) {
     console.error("Error in verifyAdmin:", error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -107,7 +105,7 @@ const adminLogout = (req, res) => {
         .status(400)
         .json({ message: "No token found, already logged out" });
     }
-    console.log("Admin logout successful" );
+    console.log("Admin logout successful");
     res.cookie("adminToken", "", { maxAge: 0 });
     res.status(200).json({ message: "Logout successful" });
   } catch (error) {
@@ -130,7 +128,7 @@ const updateAdmin = async (req, res) => {
 
     const existingPhone = await AdminModel.findOne({
       phoneNumber,
-      _id: { $ne: id }, 
+      _id: { $ne: id },
     });
 
     if (existingPhone) {
@@ -147,7 +145,7 @@ const updateAdmin = async (req, res) => {
         email,
         phoneNumber,
         role: role || existingAdmin.role,
-        password: existingAdmin.password, 
+        password: existingAdmin.password,
       },
       { new: true }
     );
@@ -157,13 +155,49 @@ const updateAdmin = async (req, res) => {
     }
 
     return res.status(200).json({ message: "Admin updated successfully" });
-
   } catch (error) {
     console.error("Update admin error:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
 
+const UpdatePassword = async (req, res) => {
+  try {
+    const { adminId, currentPassword, newPassword } = req.body;
+
+    if (!adminId || !currentPassword || !newPassword) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const admin = await AdminModel.findById(adminId);
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    const isPasswordValid = await bcrypt.compare(currentPassword, admin.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Current password is incorrect" });
+    }
+
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    const updateResult = await AdminModel.updateOne(
+      { _id: adminId },
+      { password: hashedPassword }
+    );
+
+    if (updateResult.modifiedCount === 0) {
+      return res.status(500).json({ message: "Failed to update password" });
+    }
+
+    res.status(200).json({ message: "Password updated successfully" });
+
+  } catch (error) {
+    console.error("Error in UpdatePassword:", error);
+    res.status(500).json({ message: "An unexpected error occurred while updating password" });
+  }
+};
 
 module.exports = {
   adminSignUp,
@@ -171,4 +205,5 @@ module.exports = {
   verifyAdmin,
   adminLogout,
   updateAdmin,
+  UpdatePassword,
 };

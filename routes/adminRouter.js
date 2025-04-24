@@ -4,7 +4,8 @@ const {
   adminLogin,
   verifyAdmin,
   adminLogout,
-  updateAdmin
+  updateAdmin,
+  UpdatePassword
 } = require("../controllers/adminController");
 const { verifyAdminToken } = require("../utils/AccessToken"); 
 
@@ -13,5 +14,6 @@ adminRouter.post("/login", adminLogin);
 adminRouter.get("/verify", verifyAdminToken, verifyAdmin);
 adminRouter.post("/logout", adminLogout);
 adminRouter.put("/update",updateAdmin)
+adminRouter.patch("/change-password",UpdatePassword)
 
 module.exports = adminRouter;
